@@ -267,9 +267,12 @@ function parseNumber(text) {
   if (!text) return null
   const t = text.trim()
 
-  // アラビア数字
-  const arabic = parseFloat(t.replace(/,/g, ''))
-  if (!isNaN(arabic) && arabic > 0) return Math.round(arabic)
+  // アラビア数字（日本語が混じっている場合はスキップして日本語パーサーへ）
+  const hasJapanese = /[\u3040-\u30ff\u4e00-\u9fff]/.test(t)
+  if (!hasJapanese) {
+    const arabic = parseFloat(t.replace(/,/g, ''))
+    if (!isNaN(arabic) && arabic > 0) return Math.round(arabic)
+  }
 
   // 単位付き（例：「6しゃく」「3すん」）
   for (const [unit, multiplier] of Object.entries(UNIT_MAP)) {
@@ -292,6 +295,9 @@ function parseNumber(text) {
 // 日本語の数字読みをパース
 function parseJapaneseNumber(text) {
   let t = text
+    // iOSが「900とう」のようにアラビア数字+日本語に変換するケースを処理
+    .replace(/(\d+)とう/g, (_, n) => String(parseInt(n) + 10))
+    .replace(/(\d+)と$/g, (_, n) => String(parseInt(n) + 10))
     .replace(/とう/g, '10')   // トウ → 10（百・千の後）
     .replace(/せん/g, '1000')
     .replace(/ひゃく/g, '100')
