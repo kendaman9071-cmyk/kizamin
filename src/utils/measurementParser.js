@@ -81,6 +81,11 @@ function normalizeText(text) {
     .toLowerCase()
     .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
     .replace(/[　]/g, ' ')
+    .replace(/次/g, 'つぎ')
+    .replace(/足す|プラス/g, 'たす')
+    .replace(/引く|マイナス/g, 'ひく')
+    .replace(/掛ける|かける/g, 'かける')
+    .replace(/割る/g, 'わる')
     .trim()
 }
 
