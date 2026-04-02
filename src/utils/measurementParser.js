@@ -104,8 +104,9 @@ function splitByOperatorsAndSeparators(text) {
 // 「と」の文脈判断分割
 function splitByTo(text) {
   // 「とう」はトウ（10）なので除外
+  // 数字の直後の「と」は混在数字の一部なので除外（例：「900と」→ 910）
   // 単独の「と」のみ区切りとして扱う
-  return text.split(/(?<![とう])と(?![う])/)
+  return text.split(/(?<!\d)(?<![とう])と(?![う])/)
 }
 
 // 1セグメントを解析
@@ -262,6 +263,23 @@ function buildFormula(numbers, ops) {
   return f
 }
 
+// 漢数字→数値変換（純漢字文字列、またはアラビア数字+漢字混在の漢字部分）
+function parseKanjiNum(s) {
+  const D = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '〇': 0, '零': 0 }
+  const U = { '十': 10, '拾': 10, '百': 100, '千': 1000, '万': 10000 }
+  let result = 0, cur = 0
+  for (const c of s) {
+    if (D[c] !== undefined) {
+      cur = D[c]
+    } else if (U[c] !== undefined) {
+      if (cur === 0) cur = 1 // 「十」だけ → 10、「百」だけ → 100
+      result += cur * U[c]
+      cur = 0
+    }
+  }
+  return result + cur
+}
+
 // 数値文字列を数値（mm）に変換
 function parseNumber(text) {
   if (!text) return null
@@ -279,6 +297,20 @@ function parseNumber(text) {
     const re = new RegExp(`^([\\d.]+)\\s*${unit}$`, 'i')
     const m = t.match(re)
     if (m) return Math.round(parseFloat(m[1]) * multiplier)
+  }
+
+  // 純漢数字（九百十 → 910、千八百二十 → 1820）
+  if (/^[一二三四五六七八九〇零十拾百千万]+$/.test(t)) {
+    const v = parseKanjiNum(t)
+    if (v > 0) return v
+  }
+
+  // アラビア数字 + 漢数字の混在（900十 → 910、1800二十 → 1820）
+  const mixedMatch = t.match(/^(\d+)([一二三四五六七八九〇零十拾百千万]+)$/)
+  if (mixedMatch) {
+    const arabic = parseInt(mixedMatch[1], 10)
+    const kanjiPart = parseKanjiNum(mixedMatch[2])
+    if (!isNaN(arabic) && kanjiPart >= 0) return arabic + kanjiPart
   }
 
   // 日本語数字（漢数字・ひらがな）
