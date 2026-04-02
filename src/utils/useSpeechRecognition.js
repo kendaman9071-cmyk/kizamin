@@ -16,6 +16,7 @@ export function useSpeechRecognition({ onResult, gracePeriodMs = 2000 }) {
   const isRecordingRef = useRef(false)
 
   const isSupported = !!getSpeechRecognition()
+  const lastInterimRef = useRef('')
 
   const clearGraceTimer = () => {
     if (graceTimerRef.current) {
@@ -53,6 +54,10 @@ export function useSpeechRecognition({ onResult, gracePeriodMs = 2000 }) {
 
       if (final) {
         accumulatedRef.current += final + ' '
+        lastInterimRef.current = ''
+      }
+      if (interim) {
+        lastInterimRef.current = interim
       }
       setInterimText(interim)
 
@@ -83,21 +88,24 @@ export function useSpeechRecognition({ onResult, gracePeriodMs = 2000 }) {
   const stop = useCallback(() => {
     clearGraceTimer()
     isRecordingRef.current = false
-    if (recognitionRef.current) {
-      recognitionRef.current.onend = null
-      recognitionRef.current.abort()
-      recognitionRef.current = null
-    }
     setIsRecording(false)
     setInterimText('')
 
-    // 溜まったテキストをパース
-    const text = accumulatedRef.current.trim()
-    accumulatedRef.current = ''
+    if (recognitionRef.current) {
+      const recognition = recognitionRef.current
+      recognitionRef.current = null
 
-    if (text) {
-      const results = parseVoiceInput(text)
-      if (results.length > 0) onResult(results, text)
+      recognition.onend = () => {
+        // iOSでfinalが来なかった場合はinterimを使う
+        const text = (accumulatedRef.current + ' ' + lastInterimRef.current).trim()
+        accumulatedRef.current = ''
+        lastInterimRef.current = ''
+        if (text) {
+          const results = parseVoiceInput(text)
+          if (results.length > 0) onResult(results, text)
+        }
+      }
+      recognition.stop() // abort→stopに変更（iOSで結果が確定してから終了）
     }
   }, [onResult])
 
