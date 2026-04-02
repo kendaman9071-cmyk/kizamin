@@ -6,7 +6,7 @@ import SettingsPage from './pages/SettingsPage'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/kizamin">
       <Routes>
         <Route path="/" element={<Navigate to="/input" replace />} />
         <Route path="/input" element={<VoiceInputPage />} />
