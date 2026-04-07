@@ -121,83 +121,88 @@ export default function MeasurementListPage() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* ヘッダー */}
-      <div className="px-4 pt-12 pb-3 flex items-center justify-between">
-        <div>
-          <h1 className="text-text-primary font-bold text-xl">寸法一覧</h1>
-          <p className="text-text-muted text-xs mt-0.5">
-            未切断 {uncutTotal}件 / 全 {allItems.length}件
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {editMode ? (
-            // 編集モード時：完了ボタンのみ
-            <button
-              onClick={() => setEditMode(false)}
-              className="px-4 h-9 rounded-lg bg-brand-primary text-white text-sm font-bold"
-            >
-              完了
-            </button>
-          ) : (
-            <>
-              {/* ソート順トグル */}
-              <div className="flex rounded-lg overflow-hidden border border-border">
-                {[
-                  { key: 'input', label: '入力' },
-                  { key: 'asc',   label: '昇順' },
-                  { key: 'desc',  label: '降順' },
-                ].map(({ key, label }) => (
+      <div className="px-4 pt-12 pb-2">
+        {/* 1段目：タイトル＋サブアクション */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1 className="text-text-primary font-bold text-xl">寸法一覧</h1>
+            <p className="text-text-muted text-xs mt-0.5">
+              未切断 {uncutTotal}件 / 全 {allItems.length}件
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {editMode ? (
+              <button
+                onClick={() => setEditMode(false)}
+                className="px-5 h-10 rounded-lg bg-brand-primary text-white text-sm font-bold"
+              >
+                完了
+              </button>
+            ) : (
+              <>
+                {allItems.length > 0 && (
                   <button
-                    key={key}
-                    onClick={() => setSortOrder_(key)}
-                    className={`px-2 h-9 text-xs font-bold transition-colors ${
-                      sortOrder === key ? 'bg-brand-primary text-white' : 'bg-surface text-text-muted'
-                    }`}
+                    onClick={() => setConfirmClear(true)}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface text-text-muted"
                   >
-                    {label}
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4h6v2" />
+                    </svg>
                   </button>
-                ))}
-              </div>
-              {/* 列数トグル */}
-              <div className="flex rounded-lg overflow-hidden border border-border">
-                {[1, 2, 3].map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setColumns_(n)}
-                    className={`w-9 h-9 text-sm font-bold transition-colors ${
-                      columns === n ? 'bg-brand-primary text-white' : 'bg-surface text-text-muted'
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-              {/* 全削除ボタン */}
-              {allItems.length > 0 && (
+                )}
                 <button
-                  onClick={() => setConfirmClear(true)}
-                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-text-muted"
+                  onClick={() => navigate('/settings')}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface text-text-muted"
                 >
                   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6l-1 14H6L5 6" />
-                    <path d="M10 11v6M14 11v6" />
-                    <path d="M9 6V4h6v2" />
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                   </svg>
                 </button>
-              )}
-              {/* 設定ボタン */}
-              <button
-                onClick={() => navigate('/settings')}
-                className="w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-text-muted"
-              >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </button>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
+        {/* 2段目：ソート＋列数（編集モード時は非表示） */}
+        {!editMode && (
+          <div className="flex gap-2">
+            {/* ソート順トグル */}
+            <div className="flex flex-1 rounded-xl overflow-hidden border border-border">
+              {[
+                { key: 'input', label: '入力順' },
+                { key: 'asc',   label: '昇順' },
+                { key: 'desc',  label: '降順' },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setSortOrder_(key)}
+                  className={`flex-1 h-11 text-sm font-bold transition-colors ${
+                    sortOrder === key ? 'bg-brand-primary text-white' : 'bg-surface text-text-muted'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {/* 列数トグル */}
+            <div className="flex rounded-xl overflow-hidden border border-border">
+              {[1, 2, 3].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setColumns_(n)}
+                  className={`w-11 h-11 text-base font-bold transition-colors ${
+                    columns === n ? 'bg-brand-primary text-white' : 'bg-surface text-text-muted'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {warningCount > 0 && (
