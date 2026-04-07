@@ -7,45 +7,59 @@ export function playCutSound() {
     const ctx = new AudioCtx()
     const t = ctx.currentTime
 
-    // ① ホワイトノイズバースト（ザシュッ の摩擦音）
-    const bufLen = ctx.sampleRate * 0.18
+    // ① 風切り音（刀が空気を切る「ヒュッ」）
+    const bufLen = ctx.sampleRate * 0.22
     const buffer = ctx.createBuffer(1, bufLen, ctx.sampleRate)
     const data = buffer.getChannelData(0)
-    for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1)
+    for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1
     const noise = ctx.createBufferSource()
     noise.buffer = buffer
 
-    // ハイパスで鋭い質感に
-    const hpf = ctx.createBiquadFilter()
-    hpf.type = 'highpass'
-    hpf.frequency.setValueAtTime(3500, t)
-    hpf.frequency.exponentialRampToValueAtTime(8000, t + 0.06)
+    const bpf = ctx.createBiquadFilter()
+    bpf.type = 'bandpass'
+    bpf.frequency.setValueAtTime(800, t)
+    bpf.frequency.exponentialRampToValueAtTime(5000, t + 0.07)
+    bpf.Q.setValueAtTime(1.5, t)
 
     const noiseGain = ctx.createGain()
-    noiseGain.gain.setValueAtTime(0.55, t)
-    noiseGain.gain.linearRampToValueAtTime(0.7, t + 0.02)   // 鋭い立ち上がり
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.16)
+    noiseGain.gain.setValueAtTime(0, t)
+    noiseGain.gain.linearRampToValueAtTime(0.9, t + 0.015)
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2)
 
-    noise.connect(hpf)
-    hpf.connect(noiseGain)
+    noise.connect(bpf)
+    bpf.connect(noiseGain)
     noiseGain.connect(ctx.destination)
     noise.start(t)
-    noise.stop(t + 0.18)
+    noise.stop(t + 0.22)
 
-    // ② 下降スイープ（ズバッの余韻）
-    const sweep = ctx.createOscillator()
-    const sweepGain = ctx.createGain()
-    sweep.connect(sweepGain)
-    sweepGain.connect(ctx.destination)
-    sweep.type = 'sawtooth'
-    sweep.frequency.setValueAtTime(600, t)
-    sweep.frequency.exponentialRampToValueAtTime(120, t + 0.12)
-    sweepGain.gain.setValueAtTime(0.15, t)
-    sweepGain.gain.exponentialRampToValueAtTime(0.001, t + 0.14)
-    sweep.start(t)
-    sweep.stop(t + 0.15)
+    // ② 金属的な刃の鳴き（「キン」）
+    const zing = ctx.createOscillator()
+    const zingGain = ctx.createGain()
+    zing.connect(zingGain)
+    zingGain.connect(ctx.destination)
+    zing.type = 'triangle'
+    zing.frequency.setValueAtTime(4200, t + 0.01)
+    zing.frequency.exponentialRampToValueAtTime(2800, t + 0.12)
+    zingGain.gain.setValueAtTime(0, t + 0.01)
+    zingGain.gain.linearRampToValueAtTime(0.22, t + 0.025)
+    zingGain.gain.exponentialRampToValueAtTime(0.001, t + 0.28)
+    zing.start(t + 0.01)
+    zing.stop(t + 0.3)
 
-    setTimeout(() => ctx.close(), 300)
+    // ③ 衝撃の低音（斬った瞬間の「ドン」）
+    const impact = ctx.createOscillator()
+    const impactGain = ctx.createGain()
+    impact.connect(impactGain)
+    impactGain.connect(ctx.destination)
+    impact.type = 'sine'
+    impact.frequency.setValueAtTime(140, t)
+    impact.frequency.exponentialRampToValueAtTime(55, t + 0.06)
+    impactGain.gain.setValueAtTime(0.35, t)
+    impactGain.gain.exponentialRampToValueAtTime(0.001, t + 0.07)
+    impact.start(t)
+    impact.stop(t + 0.08)
+
+    setTimeout(() => ctx.close(), 400)
   } catch {}
 }
 
