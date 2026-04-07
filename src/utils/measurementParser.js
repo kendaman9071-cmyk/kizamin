@@ -125,6 +125,11 @@ function getCustomMaterials() {
   try { return JSON.parse(localStorage.getItem('kizamin-custom-materials') || '[]') } catch { return [] }
 }
 
+// カスタム読み方をlocalStorageから取得
+function getCustomReadings() {
+  try { return JSON.parse(localStorage.getItem('kizamin-custom-readings') || '[]') } catch { return [] }
+}
+
 // 1セグメントを解析
 function parseSegment(text) {
   if (!text) return null
@@ -147,6 +152,13 @@ function parseSegment(text) {
   for (const mat of getCustomMaterials()) {
     if (mat.keyword && text.includes(mat.keyword)) {
       return [{ value: mat.value, displayValue: `${mat.value}mm`, memo: mat.label || mat.keyword, unit: 'mm' }]
+    }
+  }
+
+  // カスタム読み方チェック
+  for (const r of getCustomReadings()) {
+    if (r.keyword && text.includes(r.keyword)) {
+      return [{ value: r.value, displayValue: `${r.value}mm`, memo: r.label || '', unit: 'mm' }]
     }
   }
 

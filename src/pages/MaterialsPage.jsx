@@ -57,15 +57,26 @@ export default function MaterialsPage() {
         {/* 追加フォーム */}
         <div className="bg-surface rounded-2xl p-4 space-y-3">
           <p className="text-text-muted text-xs font-bold tracking-widest uppercase">新規登録</p>
-          <input type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
-            placeholder="よみがな（例：たるき）"
-            className="w-full bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
-          <input type="text" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)}
-            placeholder="寸法 mm（例：45）"
-            className="w-full bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
-          <input type="text" value={label} onChange={(e) => setLabel(e.target.value)}
-            placeholder="表示名（例：垂木）"
-            className="w-full bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
+          <div className="space-y-1">
+            <p className="text-text-muted text-xs px-1">よみがな</p>
+            <input type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
+              placeholder="例：たるき"
+              className="w-full bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
+          </div>
+          <div className="flex gap-2">
+            <div className="w-2/5 space-y-1">
+              <p className="text-text-muted text-xs px-1">寸法 mm</p>
+              <input type="text" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)}
+                placeholder="例：45"
+                className="w-full bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
+            </div>
+            <div className="w-3/5 space-y-1">
+              <p className="text-text-muted text-xs px-1">表示名</p>
+              <input type="text" value={label} onChange={(e) => setLabel(e.target.value)}
+                placeholder="例：垂木"
+                className="w-full bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
+            </div>
+          </div>
           {error && <p className="text-danger text-xs">{error}</p>}
           <button onClick={handleAdd}
             className="w-full py-3 rounded-xl bg-brand-primary text-white font-bold text-sm">
