@@ -8,3 +8,19 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
+
+if ('serviceWorker' in navigator) {
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {})
+    })
+  } else {
+    // 開発中は既存のSWを全解除してキャッシュも削除
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((r) => r.unregister())
+    })
+    caches.keys().then((keys) => {
+      keys.forEach((k) => caches.delete(k))
+    })
+  }
+}

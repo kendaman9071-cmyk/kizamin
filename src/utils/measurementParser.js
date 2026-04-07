@@ -3,6 +3,11 @@
 // 音声認識テキスト → 寸法データ に変換する
 // ============================================================
 
+// 小数点1桁に丸める
+function roundTo1(n) {
+  return Math.round(n * 10) / 10
+}
+
 // --- 桁読み変換表 ---
 const DIGIT_MAP = {
   'いち': 1, 'いー': 1,
@@ -82,10 +87,16 @@ function normalizeText(text) {
     .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
     .replace(/[　]/g, ' ')
     .replace(/次/g, 'つぎ')
-    .replace(/足す|プラス/g, 'たす')
-    .replace(/引く|マイナス/g, 'ひく')
-    .replace(/掛ける|かける/g, 'かける')
-    .replace(/割る/g, 'わる')
+    // 数学記号をひらがな演算子に統一（iOSが記号を直接出力するケースに対応）
+    .replace(/[+＋]/g, 'たす')
+    .replace(/[-－−‐]/g, 'ひく')
+    .replace(/[×✕＊]/g, 'かける')
+    .replace(/[÷／]/g, 'わる')
+    // 日本語・カタカナ表記
+    .replace(/足す|プラス|タス|たす/g, 'たす')
+    .replace(/引く|マイナス|ヒク|ひく/g, 'ひく')
+    .replace(/掛ける|カケル|かける/g, 'かける')
+    .replace(/割る|ワル|わる/g, 'わる')
     .trim()
 }
 
@@ -104,9 +115,9 @@ function splitByOperatorsAndSeparators(text) {
 // 「と」の文脈判断分割
 function splitByTo(text) {
   // 「とう」はトウ（10）なので除外
-  // 数字の直後の「と」は混在数字の一部なので除外（例：「900と」→ 910）
-  // 単独の「と」のみ区切りとして扱う
-  return text.split(/(?<!\d)(?<![とう])と(?![う])/)
+  // 数字と数字の間の「と」は区切りとして分割（例：「910と455と350」→ 3つ）
+  // 数字の後かつ次が非数字の「と」は混在数字の一部（例：「900と」→ 910）なので除外
+  return text.split(/(?:(?<!\d)(?<![とう])と(?![う]))|(?<=\d)と(?=\d)/)
 }
 
 // 1セグメントを解析
@@ -127,21 +138,21 @@ function parseSegment(text) {
     }
   }
 
-  // メモ付き寸法のチェック（数字 + 文字）
-  const { numericPart, memoPart } = extractMemo(text)
-
-  // 演算式チェック
-  const calcResult = parseCalculation(numericPart)
+  // 演算式チェック（extractMemoより先に行う。extractMemoが演算子をメモに誤分類するため）
+  const calcResult = parseCalculation(text)
   if (calcResult !== null) {
     const { values, formula } = calcResult
     return values.map((v) => ({
       value: v,
       displayValue: formula ? `${formula}=${v}mm` : `${v}mm`,
-      memo: memoPart,
+      memo: '',
       unit: 'mm',
       warning: false,
     }))
   }
+
+  // メモ付き寸法のチェック（数字 + 文字）
+  const { numericPart, memoPart } = extractMemo(text)
 
   // 単純な数値
   const value = parseNumber(numericPart)
@@ -200,23 +211,31 @@ function parseCalculation(text) {
       ops.push(token)
     } else {
       const num = parseNumber(token)
-      if (num !== null) numbers.push(num)
+      if (num !== null) {
+        numbers.push(num)
+      } else {
+        // メモが末尾に付いたトークン（例: "455まど"）の場合、先頭の数字だけ抽出
+        const prefixMatch = token.match(/^(\d+\.?\d*)/)
+        if (prefixMatch) numbers.push(roundTo1(parseFloat(prefixMatch[1])))
+      }
     }
   }
 
   if (numbers.length === 0) return null
+  // 演算子があるのに数値が1つしかない場合は演算式として無効
+  if (ops.length > 0 && numbers.length < 2) return null
 
   // ×N の場合：N件個別登録
   if (ops.length === 1 && ops[0] === '*' && numbers.length === 2) {
     const [base, count] = numbers
-    const values = Array(Math.round(count)).fill(Math.round(base))
+    const values = Array(Math.round(count)).fill(roundTo1(base))
     return { values, formula: `${base}×${Math.round(count)}` }
   }
 
   // ÷N の場合：結果をN件登録
   if (ops.length === 1 && ops[0] === '/' && numbers.length === 2) {
     const [base, count] = numbers
-    const result = Math.round(base / count)
+    const result = roundTo1(base / count)
     const values = Array(Math.round(count)).fill(result)
     return { values, formula: `${base}÷${Math.round(count)}` }
   }
@@ -248,7 +267,7 @@ function parseCalculation(text) {
       if (tempOps[j] === '-') result -= tempNums[j + 1]
     }
     const formula = buildFormula(numbers, ops)
-    return { values: [Math.round(result)], formula }
+    return { values: [roundTo1(result)], formula }
   } catch {
     return null
   }
@@ -289,14 +308,14 @@ function parseNumber(text) {
   const hasJapanese = /[\u3040-\u30ff\u4e00-\u9fff]/.test(t)
   if (!hasJapanese) {
     const arabic = parseFloat(t.replace(/,/g, ''))
-    if (!isNaN(arabic) && arabic > 0) return Math.round(arabic)
+    if (!isNaN(arabic) && arabic >= 0) return roundTo1(arabic)
   }
 
   // 単位付き（例：「6しゃく」「3すん」）
   for (const [unit, multiplier] of Object.entries(UNIT_MAP)) {
     const re = new RegExp(`^([\\d.]+)\\s*${unit}$`, 'i')
     const m = t.match(re)
-    if (m) return Math.round(parseFloat(m[1]) * multiplier)
+    if (m) return roundTo1(parseFloat(m[1]) * multiplier)
   }
 
   // 純漢数字（九百十 → 910、千八百二十 → 1820）
@@ -327,8 +346,9 @@ function parseNumber(text) {
 // 日本語の数字読みをパース
 function parseJapaneseNumber(text) {
   let t = text
-    // iOSが「900とう」のようにアラビア数字+日本語に変換するケースを処理
+    // iOSが「900とう」「900頭」のようにアラビア数字+日本語に変換するケースを処理
     .replace(/(\d+)とう/g, (_, n) => String(parseInt(n) + 10))
+    .replace(/(\d+)頭/g, (_, n) => String(parseInt(n) + 10))   // 「頭（とう）」→ +10
     .replace(/(\d+)と$/g, (_, n) => String(parseInt(n) + 10))
     .replace(/とう/g, '10')   // トウ → 10（百・千の後）
     .replace(/せん/g, '1000')

@@ -1,11 +1,21 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getSetting, setSetting } from '../utils/settings'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [feedbackText, setFeedbackText] = useState('')
   const [feedbackSent, setFeedbackSent] = useState(false)
+
+  const [wakeLock, setWakeLock] = useState(() => getSetting('wakeLock'))
+  const [vibration, setVibration] = useState(() => getSetting('vibration'))
+  const [doubleTap, setDoubleTap] = useState(() => getSetting('doubleTap'))
+
+  const handleToggle = (key, value, setter) => {
+    setter(value)
+    setSetting(key, value)
+  }
 
   const handleSendFeedback = () => {
     if (!feedbackText.trim()) return
@@ -30,11 +40,31 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar px-4 space-y-6 pb-8">
+        <SettingsSection title="切断モード">
+          <SettingsToggle
+            label="画面スリープ無効"
+            description="切断中に画面が暗くなるのを防ぐ"
+            value={wakeLock}
+            onChange={(v) => handleToggle('wakeLock', v, setWakeLock)}
+          />
+          <SettingsToggle
+            label="振動フィードバック"
+            description="切断確定時に軽く振動する"
+            value={vibration}
+            onChange={(v) => handleToggle('vibration', v, setVibration)}
+          />
+          <SettingsToggle
+            label="誤タップ防止"
+            description="2回タップで切断確定（誤操作を防ぐ）"
+            value={doubleTap}
+            onChange={(v) => handleToggle('doubleTap', v, setDoubleTap)}
+          />
+        </SettingsSection>
+
         <SettingsSection title="表示">
           <SettingsRow label="フォントサイズ" value="中" />
           <SettingsRow label="切断モードフォント" value="特大" />
-          <SettingsToggle label="ダークモード" defaultOn />
-          <SettingsToggle label="画面向き固定（縦）" defaultOn />
+          <SettingsRow label="ダークモード" value="ON（固定）" />
         </SettingsSection>
 
         <SettingsSection title="音声認識">
@@ -43,16 +73,9 @@ export default function SettingsPage() {
           <SettingsNav label="材料登録" />
         </SettingsSection>
 
-        <SettingsSection title="切断モード">
-          <SettingsToggle label="画面スリープ無効" defaultOn />
-        </SettingsSection>
-
         <SettingsSection title="データ管理">
           <SettingsNav label="プロジェクト管理" />
-          <SettingsNav label="バックアップ" />
-          <button className="w-full text-left text-danger px-4 py-3 text-sm font-medium">
-            全データ削除
-          </button>
+          <SettingsNav label="バックアップ（準備中）" />
         </SettingsSection>
 
         <SettingsSection title="サポート">
@@ -76,9 +99,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleSendFeedback}
                 className={`mt-2 w-full py-3 rounded-xl font-bold text-sm transition-colors ${
-                  feedbackSent
-                    ? 'bg-success text-white'
-                    : 'bg-brand-primary text-background'
+                  feedbackSent ? 'bg-success text-white' : 'bg-brand-primary text-background'
                 }`}
               >
                 {feedbackSent ? '送信しました ✓' : '送信'}
@@ -118,14 +139,20 @@ function SettingsRow({ label, value }) {
   )
 }
 
-function SettingsToggle({ label, defaultOn }) {
+function SettingsToggle({ label, description, value, onChange }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <span className="text-text-primary text-sm">{label}</span>
-      <div className={`w-11 h-6 rounded-full flex items-center px-1 transition-colors ${defaultOn ? 'bg-brand-primary' : 'bg-border'}`}>
-        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${defaultOn ? 'translate-x-5' : 'translate-x-0'}`} />
+    <button
+      className="w-full flex items-center justify-between px-4 py-3 text-left"
+      onClick={() => onChange(!value)}
+    >
+      <div className="flex-1 mr-4">
+        <div className="text-text-primary text-sm">{label}</div>
+        {description && <div className="text-text-muted text-xs mt-0.5">{description}</div>}
       </div>
-    </div>
+      <div className={`flex-shrink-0 w-11 h-6 rounded-full flex items-center px-1 transition-colors ${value ? 'bg-brand-primary' : 'bg-border'}`}>
+        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${value ? 'translate-x-5' : 'translate-x-0'}`} />
+      </div>
+    </button>
   )
 }
 

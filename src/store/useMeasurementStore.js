@@ -7,6 +7,9 @@ export const useMeasurementStore = create(
       // 全寸法データ
       measurements: [],
 
+      // 手動並び替え後の表示順（item IDの配列）
+      itemOrder: [],
+
       // 切断モードに送る選択済み寸法
       selectedForCutting: [],
 
@@ -78,11 +81,52 @@ export const useMeasurementStore = create(
         }))
       },
 
+      // 切断を取り消し
+      markAsUncut: (itemId) => {
+        set((state) => ({
+          measurements: state.measurements.map((batch) => ({
+            ...batch,
+            items: batch.items.map((item) =>
+              item.id === itemId ? { ...item, cut: false } : item
+            ),
+          })),
+        }))
+      },
+
       // 切断モード用に選択
       setSelectedForCutting: (items) => set({ selectedForCutting: items }),
 
+      // 切断モード中に寸法を追加（measurements と selectedForCutting を同時更新）
+      addToSelectedForCutting: (parsedResults) => {
+        const timestamp = Date.now()
+        const newItems = parsedResults.map((r, i) => ({
+          id: timestamp + i,
+          value: r.value,
+          displayValue: r.displayValue,
+          unit: r.unit || 'mm',
+          originalUnit: r.originalUnit || null,
+          originalValue: r.originalValue || null,
+          memo: r.memo || '',
+          warning: r.warning || false,
+          warningText: r.warningText || '',
+          cut: false,
+        }))
+        const batch = {
+          id: timestamp,
+          timestamp: new Date().toISOString(),
+          items: newItems,
+        }
+        set((state) => ({
+          measurements: [...state.measurements, batch],
+          selectedForCutting: [...state.selectedForCutting, ...newItems],
+        }))
+      },
+
+      // 並び順を保存
+      setItemOrder: (ids) => set({ itemOrder: ids }),
+
       // 全データ削除
-      clearAll: () => set({ measurements: [], selectedForCutting: [] }),
+      clearAll: () => set({ measurements: [], selectedForCutting: [], itemOrder: [] }),
     }),
     {
       name: 'kizamin-measurements',
