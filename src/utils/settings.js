@@ -2,6 +2,8 @@ const DEFAULTS = {
   wakeLock: true,
   vibration: true,
   doubleTap: false,
+  fontSize: 'md',
+  cuttingFont: 'md',
 }
 
 export function getSetting(key) {

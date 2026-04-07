@@ -4,7 +4,14 @@ import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion
 import { useMeasurementStore } from '../store/useMeasurementStore'
 import { useSpeechRecognition } from '../utils/useSpeechRecognition'
 import { playStartSound, playStopSound } from '../utils/sounds'
+import { getSetting } from '../utils/settings'
 import BottomNav from '../components/BottomNav'
+
+const FONT = {
+  sm: { v1: 'text-base', v2: 'text-sm', v3: 'text-xs' },
+  md: { v1: 'text-xl',   v2: 'text-lg', v3: 'text-sm' },
+  lg: { v1: 'text-2xl',  v2: 'text-xl', v3: 'text-base' },
+}
 
 const LONG_PRESS_MS = 600
 
@@ -19,6 +26,7 @@ export default function MeasurementListPage() {
   const [confirmClear, setConfirmClear] = useState(false)
   const [cutExpanded, setCutExpanded] = useState(false)
   const [filterWarning, setFilterWarning] = useState(false)
+  const [fontSize] = useState(() => getSetting('fontSize'))
 
   const allItems = measurements.flatMap((b) => b.items.map((item) => ({ ...item, batchId: b.id })))
 
@@ -262,6 +270,7 @@ export default function MeasurementListPage() {
                   <DraggableCard
                     key={item.id}
                     item={item}
+                    fontSize={fontSize}
                     onTap={() => setEditingItem({
                       groupItems: [item],
                       value: String(item.value ?? ''),
@@ -282,6 +291,7 @@ export default function MeasurementListPage() {
                     key={item.id}
                     item={item}
                     columns={displayColumns}
+                    fontSize={fontSize}
                     editMode={false}
                     onLongPress={enterEditMode}
                     onTap={() => setEditingItem({
@@ -366,7 +376,7 @@ export default function MeasurementListPage() {
 }
 
 // ─── ドラッグ可能カードラッパー（editMode専用） ─────────────────────────
-function DraggableCard({ item, onTap, onDelete }) {
+function DraggableCard({ item, onTap, onDelete, fontSize }) {
   const dragControls = useDragControls()
   return (
     <Reorder.Item
@@ -381,6 +391,7 @@ function DraggableCard({ item, onTap, onDelete }) {
         item={{ ...item, groupItems: [item] }}
         columns={1}
         editMode
+        fontSize={fontSize}
         onLongPress={() => {}}
         onTap={onTap}
         onDelete={onDelete}
@@ -391,7 +402,8 @@ function DraggableCard({ item, onTap, onDelete }) {
 }
 
 // ─── カードコンポーネント ───────────────────────────────────────────
-function MeasurementCard({ item, columns, isCut = false, editMode = false, onLongPress, onTap, onDelete, dragControls }) {
+function MeasurementCard({ item, columns, isCut = false, editMode = false, onLongPress, onTap, onDelete, dragControls, fontSize = 'md' }) {
+  const f = FONT[fontSize] ?? FONT.md
   const timerRef = useRef(null)
   const [pressing, setPressing] = useState(false)
 
@@ -470,7 +482,7 @@ function MeasurementCard({ item, columns, isCut = false, editMode = false, onLon
         <div className="text-center min-w-0">
           <div className={`font-bold leading-tight truncate ${
             isCut ? 'line-through text-text-muted' : 'text-text-primary'
-          } ${columns === 3 ? 'text-sm' : 'text-lg'}`}>
+          } ${columns === 3 ? f.v3 : f.v2}`}>
             {item.displayValue}
             {count > 1 && <span className="text-brand-light font-bold ml-0.5">×{count}</span>}
           </div>
@@ -497,11 +509,11 @@ function MeasurementCard({ item, columns, isCut = false, editMode = false, onLon
             </div>
           )}
           <div className="flex-1">
-            <span className={`font-bold text-xl ${isCut ? 'line-through text-text-muted' : 'text-text-primary'}`}>
+            <span className={`font-bold ${f.v1} ${isCut ? 'line-through text-text-muted' : 'text-text-primary'}`}>
               {item.displayValue}
             </span>
             {count > 1 && (
-              <span className="text-brand-light font-bold text-xl ml-1">×{count}</span>
+              <span className={`text-brand-light font-bold ${f.v1} ml-1`}>×{count}</span>
             )}
             {item.memo && (
               <span className="text-text-muted text-sm ml-2">{item.memo}</span>

@@ -120,6 +120,11 @@ function splitByTo(text) {
   return text.split(/(?:(?<!\d)(?<![とう])と(?![う]))|(?<=\d)と(?=\d)/)
 }
 
+// カスタム材料をlocalStorageから取得
+function getCustomMaterials() {
+  try { return JSON.parse(localStorage.getItem('kizamin-custom-materials') || '[]') } catch { return [] }
+}
+
 // 1セグメントを解析
 function parseSegment(text) {
   if (!text) return null
@@ -135,6 +140,13 @@ function parseSegment(text) {
   for (const [key, data] of Object.entries(SIZE_KEYWORDS)) {
     if (text.includes(key)) {
       return [{ value: data.value, displayValue: `${data.value}mm`, memo: '', unit: 'mm' }]
+    }
+  }
+
+  // カスタム材料チェック
+  for (const mat of getCustomMaterials()) {
+    if (mat.keyword && text.includes(mat.keyword)) {
+      return [{ value: mat.value, displayValue: `${mat.value}mm`, memo: mat.label || mat.keyword, unit: 'mm' }]
     }
   }
 

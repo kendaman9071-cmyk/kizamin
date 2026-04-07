@@ -6,6 +6,12 @@ import { useSpeechRecognition } from '../utils/useSpeechRecognition'
 import { parseVoiceInput } from '../utils/measurementParser'
 import { getSetting } from '../utils/settings'
 
+const CUTTING_FONT_STYLE = {
+  sm: { fontSize: 'clamp(3rem, 15vw, 6rem)' },
+  md: { fontSize: 'clamp(4rem, 18vw, 7.5rem)' },
+  lg: { fontSize: 'clamp(5rem, 22vw, 9rem)' },
+}
+
 const SWIPE_THRESHOLD = 80
 const PROGRESS_KEY = 'kizamin-cutting-progress'
 
@@ -294,7 +300,8 @@ export default function CuttingModePage() {
             exit={{ opacity: 0, y: -20 }}
             className="text-center"
           >
-            <div className="dimension-display text-text-primary">
+            <div className="dimension-display text-text-primary"
+              style={CUTTING_FONT_STYLE[getSetting('cuttingFont')] ?? CUTTING_FONT_STYLE.md}>
               {currentGroup.value}
               <span className="text-text-muted text-3xl font-normal ml-2">mm</span>
             </div>
