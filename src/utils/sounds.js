@@ -7,91 +7,46 @@ export function playCutSound() {
     const ctx = new AudioCtx()
     const t = ctx.currentTime
 
-    // ① 打突音：Sawtooth 1000Hz 瞬間attack→即decay（0ms）
-    const strike = ctx.createOscillator()
-    const strikeGain = ctx.createGain()
-    strike.connect(strikeGain)
-    strikeGain.connect(ctx.destination)
-    strike.type = 'sawtooth'
-    strike.frequency.setValueAtTime(1000, t)
-    strikeGain.gain.setValueAtTime(0.5, t)
-    strikeGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1)
-    strike.start(t)
-    strike.stop(t + 0.1)
+    // ① メインのチン（C6 = 1047Hz）— クリーンなサイン波
+    const ping = ctx.createOscillator()
+    const pingGain = ctx.createGain()
+    ping.connect(pingGain)
+    pingGain.connect(ctx.destination)
+    ping.type = 'sine'
+    ping.frequency.setValueAtTime(1047, t)
+    ping.frequency.exponentialRampToValueAtTime(980, t + 0.3)
+    pingGain.gain.setValueAtTime(0, t)
+    pingGain.gain.linearRampToValueAtTime(0.45, t + 0.008)
+    pingGain.gain.exponentialRampToValueAtTime(0.001, t + 0.35)
+    ping.start(t)
+    ping.stop(t + 0.36)
 
-    // ③ 重厚感：Sine 100Hz ドスッと（0ms）
-    const thud = ctx.createOscillator()
-    const thudGain = ctx.createGain()
-    thud.connect(thudGain)
-    thudGain.connect(ctx.destination)
-    thud.type = 'sine'
-    thud.frequency.setValueAtTime(100, t)
-    thudGain.gain.setValueAtTime(0.6, t)
-    thudGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08)
-    thud.start(t)
-    thud.stop(t + 0.08)
+    // ② オクターブ上の倍音（C7 = 2093Hz）— 金属的な艶
+    const overtone = ctx.createOscillator()
+    const overtoneGain = ctx.createGain()
+    overtone.connect(overtoneGain)
+    overtoneGain.connect(ctx.destination)
+    overtone.type = 'sine'
+    overtone.frequency.setValueAtTime(2093, t)
+    overtoneGain.gain.setValueAtTime(0, t)
+    overtoneGain.gain.linearRampToValueAtTime(0.18, t + 0.008)
+    overtoneGain.gain.exponentialRampToValueAtTime(0.001, t + 0.18)
+    overtone.start(t)
+    overtone.stop(t + 0.2)
 
-    // ② 金属ビビり：ホワイトノイズ＋BandPass 3000Hz、0.6秒（50ms〜）
-    const vibrateLen = ctx.sampleRate * 0.7
-    const vibrateBuf = ctx.createBuffer(1, vibrateLen, ctx.sampleRate)
-    const vibrateData = vibrateBuf.getChannelData(0)
-    for (let i = 0; i < vibrateLen; i++) vibrateData[i] = Math.random() * 2 - 1
-    const vibrateNoise = ctx.createBufferSource()
-    vibrateNoise.buffer = vibrateBuf
+    // ③ 瞬間的なクリック（立ち上がりの締まり感）
+    const click = ctx.createOscillator()
+    const clickGain = ctx.createGain()
+    click.connect(clickGain)
+    clickGain.connect(ctx.destination)
+    click.type = 'triangle'
+    click.frequency.setValueAtTime(3500, t)
+    clickGain.gain.setValueAtTime(0.15, t)
+    clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.025)
+    click.start(t)
+    click.stop(t + 0.03)
 
-    const bpf = ctx.createBiquadFilter()
-    bpf.type = 'bandpass'
-    bpf.frequency.setValueAtTime(3000, t + 0.05)
-    bpf.Q.setValueAtTime(8, t + 0.05)
-
-    const vibrateGain = ctx.createGain()
-    vibrateGain.gain.setValueAtTime(0, t + 0.05)
-    vibrateGain.gain.linearRampToValueAtTime(0.35, t + 0.1)
-    vibrateGain.gain.setValueAtTime(0.35, t + 0.55)
-    vibrateGain.gain.linearRampToValueAtTime(0, t + 0.8)
-
-    vibrateNoise.connect(bpf)
-    bpf.connect(vibrateGain)
-    vibrateGain.connect(ctx.destination)
-    vibrateNoise.start(t + 0.05)
-    vibrateNoise.stop(t + 0.8)
-
-    // ④ 擦り合い：ホワイトノイズ＋HighPass 2500Hz＋LFO 6Hz（100ms〜）
-    const scrapeLen = ctx.sampleRate * 0.75
-    const scrapeBuf = ctx.createBuffer(1, scrapeLen, ctx.sampleRate)
-    const scrapeData = scrapeBuf.getChannelData(0)
-    for (let i = 0; i < scrapeLen; i++) scrapeData[i] = Math.random() * 2 - 1
-    const scrapeNoise = ctx.createBufferSource()
-    scrapeNoise.buffer = scrapeBuf
-
-    const hpf = ctx.createBiquadFilter()
-    hpf.type = 'highpass'
-    hpf.frequency.setValueAtTime(2500, t + 0.1)
-
-    const scrapeGain = ctx.createGain()
-    scrapeGain.gain.setValueAtTime(0, t + 0.1)
-    scrapeGain.gain.linearRampToValueAtTime(0.25, t + 0.18)
-    scrapeGain.gain.setValueAtTime(0.25, t + 0.55)
-    scrapeGain.gain.linearRampToValueAtTime(0, t + 0.8)
-
-    // LFO 6Hz で振幅変調
-    const lfo = ctx.createOscillator()
-    const lfoGain = ctx.createGain()
-    lfo.type = 'sine'
-    lfo.frequency.setValueAtTime(6, t + 0.1)
-    lfoGain.gain.setValueAtTime(0.25, t + 0.1)
-    lfo.connect(lfoGain)
-    lfoGain.connect(scrapeGain.gain)
-
-    scrapeNoise.connect(hpf)
-    hpf.connect(scrapeGain)
-    scrapeGain.connect(ctx.destination)
-    scrapeNoise.start(t + 0.1)
-    scrapeNoise.stop(t + 0.8)
-    lfo.start(t + 0.1)
-    lfo.stop(t + 0.8)
-
-    setTimeout(() => ctx.close(), 1000)
+    setTimeout(() => ctx.close(), 500)
   } catch {}
 }
 
