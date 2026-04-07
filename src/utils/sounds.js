@@ -1,5 +1,54 @@
 // Web Audio API でサウンドを生成（外部ファイル不要）
 
+export function playCutSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext
+    if (!AudioCtx) return
+    const ctx = new AudioCtx()
+    const t = ctx.currentTime
+
+    // ① ホワイトノイズバースト（ザシュッ の摩擦音）
+    const bufLen = ctx.sampleRate * 0.18
+    const buffer = ctx.createBuffer(1, bufLen, ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1)
+    const noise = ctx.createBufferSource()
+    noise.buffer = buffer
+
+    // ハイパスで鋭い質感に
+    const hpf = ctx.createBiquadFilter()
+    hpf.type = 'highpass'
+    hpf.frequency.setValueAtTime(3500, t)
+    hpf.frequency.exponentialRampToValueAtTime(8000, t + 0.06)
+
+    const noiseGain = ctx.createGain()
+    noiseGain.gain.setValueAtTime(0.55, t)
+    noiseGain.gain.linearRampToValueAtTime(0.7, t + 0.02)   // 鋭い立ち上がり
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.16)
+
+    noise.connect(hpf)
+    hpf.connect(noiseGain)
+    noiseGain.connect(ctx.destination)
+    noise.start(t)
+    noise.stop(t + 0.18)
+
+    // ② 下降スイープ（ズバッの余韻）
+    const sweep = ctx.createOscillator()
+    const sweepGain = ctx.createGain()
+    sweep.connect(sweepGain)
+    sweepGain.connect(ctx.destination)
+    sweep.type = 'sawtooth'
+    sweep.frequency.setValueAtTime(600, t)
+    sweep.frequency.exponentialRampToValueAtTime(120, t + 0.12)
+    sweepGain.gain.setValueAtTime(0.15, t)
+    sweepGain.gain.exponentialRampToValueAtTime(0.001, t + 0.14)
+    sweep.start(t)
+    sweep.stop(t + 0.15)
+
+    setTimeout(() => ctx.close(), 300)
+  } catch {}
+}
+
 export function playStopSound() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext

@@ -5,6 +5,7 @@ import { useMeasurementStore } from '../store/useMeasurementStore'
 import { useSpeechRecognition } from '../utils/useSpeechRecognition'
 import { parseVoiceInput } from '../utils/measurementParser'
 import { getSetting } from '../utils/settings'
+import { playCutSound } from '../utils/sounds'
 
 const CUTTING_FONT_STYLE = {
   sm: { fontSize: 'clamp(3rem, 15vw, 6rem)' },
@@ -117,6 +118,7 @@ export default function CuttingModePage() {
 
   const confirmCut = () => {
     if (!currentGroup) return
+    playCutSound()
     if (getSetting('vibration')) navigator.vibrate?.(50)
 
     const item = currentGroup.items[doneInGroup]
