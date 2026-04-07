@@ -60,14 +60,12 @@ export default function MaterialsPage() {
           <input type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
             placeholder="よみがな（例：たるき）"
             className="w-full bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
-          <div className="flex gap-2">
-            <input type="text" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)}
-              placeholder="寸法 mm（例：45）"
-              className="flex-1 bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
-            <input type="text" value={label} onChange={(e) => setLabel(e.target.value)}
-              placeholder="表示名（例：垂木）"
-              className="flex-1 bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
-          </div>
+          <input type="text" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)}
+            placeholder="寸法 mm（例：45）"
+            className="w-full bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
+          <input type="text" value={label} onChange={(e) => setLabel(e.target.value)}
+            placeholder="表示名（例：垂木）"
+            className="w-full bg-background text-text-primary text-sm rounded-xl px-3 py-2.5 border border-border focus:outline-none focus:border-brand-primary" />
           {error && <p className="text-danger text-xs">{error}</p>}
           <button onClick={handleAdd}
             className="w-full py-3 rounded-xl bg-brand-primary text-white font-bold text-sm">
