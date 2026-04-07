@@ -83,13 +83,16 @@ export default function MaterialsPage() {
               <AnimatePresence>
                 {materials.map((m) => (
                   <motion.div key={m.id} exit={{ opacity: 0, height: 0 }}
-                    className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <span className="text-brand-primary font-bold text-sm">{m.keyword}</span>
-                      <span className="text-text-muted text-xs ml-2">{m.label} — {m.value}mm</span>
+                    className="flex items-center justify-between px-4 py-3 gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-text-primary font-bold text-sm truncate">{m.label}</p>
+                      <p className="text-text-muted text-xs mt-0.5">
+                        <span className="text-brand-primary">{m.keyword}</span>
+                        <span className="ml-2">{m.value}mm</span>
+                      </p>
                     </div>
                     <button onClick={() => handleDelete(m.id)}
-                      className="w-7 h-7 rounded-full bg-danger/20 flex items-center justify-center">
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-danger/20 flex items-center justify-center">
                       <svg width="12" height="12" stroke="#FF4444" strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24">
                         <path d="M18 6L6 18M6 6l12 12"/>
                       </svg>
@@ -106,9 +109,9 @@ export default function MaterialsPage() {
           <p className="text-text-muted text-xs font-bold tracking-widest uppercase mb-2 px-1">デフォルト（変更不可）</p>
           <div className="bg-surface rounded-2xl overflow-hidden divide-y divide-border">
             {DEFAULTS.map((m) => (
-              <div key={m.keyword} className="flex items-center justify-between px-4 py-3">
-                <span className="text-text-muted text-sm">{m.keyword}</span>
-                <span className="text-text-muted text-xs">{m.label}</span>
+              <div key={m.keyword} className="px-4 py-3">
+                <p className="text-text-muted text-sm">{m.label}</p>
+                <p className="text-text-muted text-xs mt-0.5">{m.keyword}</p>
               </div>
             ))}
           </div>
